@@ -78,3 +78,9 @@ The following are the arguments that can be passed into the model to initialize 
 - **n_steps** (*int*) – The number of steps to run for each environment per update
 
 There are a lot more arguments which can be found out at:  https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html#stable_baselines3.ppo.PPO
+
+The following are important factors that you need to consider when using Reinforcement Learning modules such as this:
+
+- Always do several training runs due to the stochastic nature of RL
+- Tune hyperparameters; don’t just throw an algorithm at a problem
+- Reward engineering needs to be done to design a suitable reward function
