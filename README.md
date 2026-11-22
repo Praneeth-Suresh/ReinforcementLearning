@@ -1,5 +1,7 @@
 # Reinforcement learning on Gymnasium
 
+[Open the GridWorld notebook](GridWorld.ipynb). This is a learning notebook, not a benchmark. The examples below show the Gymnasium interaction loop and a minimal PPO setup.
+
 ## Motivation
 
 Experimenting with RL on Gymnasium is an ideal starting point to delve into the algorithms that underlie agent training. Gymnasium allows focus on the agent by taking care of the environment implementation. Here, I go through the Gymnasium framework to explore how best to use it to experiment with RL models.
@@ -18,6 +20,10 @@ Once initialized, `obs, info = env.reset()` will yield the first observation fro
 These allow us to modify an existing environment without having to alter the underlying code directly. The following code sets a **time limit** on the Markov Decision Process (MDP) using the `TimeLimit` wrapper and exemplifies how wrappers are to be used:
 
 ```python
+import gymnasium as gym
+import minigrid  # Registers the MiniGrid environments.
+from gymnasium.wrappers import TimeLimit
+
 env = gym.make("MiniGrid-Empty-5x5-v0", render_mode="rgb_array")
 env = TimeLimit(env, max_episode_steps=100)
 ```
@@ -60,16 +66,34 @@ We use **`Stable-Baselines3`** for the basic implementation of the agent. The mo
 
 Most of the library tries to follow a sklearn-like syntax for the Reinforcement Learning algorithms as follows:
 
-```python
-model = PPO("CnnPolicy", env, verbose=1)
-model.learn(total_timesteps=10_000)
+Install the notebook's primary libraries with `python -m pip install jupyter matplotlib minigrid stable-baselines3`. For a self-contained training example, flatten MiniGrid's observations before passing them to PPO. A single short run demonstrates the API, not policy quality.
 
-# To evaluate the model
-while not done:
-    action, _ = model.predict(obs)
-    obs, reward, done, truncated, info = env.step(action)
-    frames.append(env.render())
+```python
+import gymnasium as gym
+from gymnasium.wrappers import TimeLimit
+from minigrid.wrappers import FlatObsWrapper
+from stable_baselines3 import PPO
+
+env = FlatObsWrapper(TimeLimit(
+    gym.make("MiniGrid-Empty-5x5-v0", render_mode="rgb_array"),
+    max_episode_steps=100,
+))
+try:
+    model = PPO("MlpPolicy", env, seed=0, verbose=1)
+    model.learn(total_timesteps=10_000)
+
+    obs, _ = env.reset(seed=1)
+    frames = [env.render()]
+    terminated = truncated = False
+    while not (terminated or truncated):
+        action, _ = model.predict(obs, deterministic=True)
+        obs, reward, terminated, truncated, _ = env.step(int(action.item()))
+        frames.append(env.render())
+finally:
+    env.close()
 ```
+
+See the [MiniGrid observation wrappers](https://minigrid.farama.org/api/wrappers/) and the [Stable-Baselines3 PPO guide](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html).
 
 The following are the arguments that can be passed into the model to initialize it: 
 
